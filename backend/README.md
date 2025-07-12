@@ -47,13 +47,49 @@ This phase includes:
 - Zod validation for all inputs
 - Category and size management
 
+See [Items API Documentation](./docs/items-api.md) for detailed documentation.
+
+## ✅ Phase 4 Swap & Points System Complete
+
+This phase includes:
+
+- **Swap Request System**
+  - Direct item-to-item swaps
+  - Point-based redemptions
+  - Accept/reject/cancel requests
+  - Swap history tracking
+- **Points System**
+  - Automatic point calculation based on condition
+  - Point transactions tracking
+  - Points leaderboard
+  - Balance management
+- **Dashboard API**
+  - Comprehensive user statistics
+
+See [Swaps & Points API Documentation](./docs/swaps-api.md) for detailed documentation.
+
+## ✅ Phase 5 Admin Routes Complete
+
+This phase includes:
+
+- **Admin Dashboard**
+  - Platform statistics (users and items counts)
+  - Pending items queue for moderation
+  - Full items list with filters
+- **Item Moderation**
+  - Approve/reject pending items
+  - Delete any item (admin privilege)
+  - View all items regardless of status
+
+See [Admin API Documentation](./docs/admin-api.md) for detailed documentation.
+
 ### Key Features:
 
-- **Controlled Image Uploads**: Images go through backend before Cloudinary
-- **Item Status Workflow**: PENDING → APPROVED/REJECTED → AVAILABLE → SWAPPED
-- **Advanced Search**: Filter by category, type, size, condition, tags
-- **Admin Controls**: Approve/reject items, view all items
-- **Owner Controls**: Edit/delete own items (with restrictions)
+- **Two Exchange Methods**: Direct swaps or point redemptions
+- **Automated Points**: Points calculated by item condition (10-50 points)
+- **Transaction Safety**: Database transactions ensure consistency
+- **Request Management**: Full lifecycle from creation to completion
+- **Rich Dashboard**: All user data aggregated in one endpoint
 
 ## Installation
 
@@ -112,7 +148,7 @@ npm run dev
 
 ## API Structure
 
-### Implemented Routes
+### Complete API Routes
 
 #### Authentication
 
@@ -143,12 +179,33 @@ npm run dev
 - `POST /api/items/:id/approve` - Approve item (admin)
 - `POST /api/items/:id/reject` - Reject item (admin)
 
-### To Be Implemented
+#### Swaps
 
-- `/api/swaps` - Swap requests and management
-- `/api/points` - Points transactions
-- `/api/admin` - Admin dashboard data
-- `/api/dashboard` - User dashboard data
+- `POST /api/swaps/requests` - Create swap request
+- `POST /api/swaps/redeem` - Create point redemption
+- `GET /api/swaps/requests` - List swap requests
+- `GET /api/swaps/requests/:id` - Get request details
+- `POST /api/swaps/requests/:id/respond` - Accept/reject request
+- `POST /api/swaps/requests/:id/cancel` - Cancel request
+- `GET /api/swaps/history` - Get swap history
+
+#### Points
+
+- `GET /api/points/transactions` - Get point transactions
+- `GET /api/points/balance` - Get current balance
+- `GET /api/points/leaderboard` - Get top users
+- `GET /api/points/calculate/:itemId` - Calculate item points
+
+#### Dashboard
+
+- `GET /api/dashboard` - Get full dashboard data
+- `GET /api/dashboard/summary` - Get summary metrics
+
+#### Admin
+
+- `GET /api/admin/stats` - Get platform statistics
+- `GET /api/admin/items/pending` - Get pending items for moderation
+- `GET /api/admin/items` - Get all items with admin filters
 
 ## Development Scripts
 
@@ -160,27 +217,54 @@ npm run dev
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
-## Upload Flow
+## System Flows
 
-1. Frontend sends images to `/api/upload/images`
-2. Backend validates file types and sizes
-3. Backend uploads to Cloudinary
-4. Backend returns Cloudinary URLs
-5. Frontend uses URLs when creating item
+### Item Lifecycle
 
-## Item Workflow
+```
+PENDING → APPROVED → AVAILABLE → SWAPPED
+     ↓
+  REJECTED
+```
 
-1. User creates item → Status: PENDING
-2. Admin approves → Status: AVAILABLE
-3. Item gets swapped → Status: SWAPPED
+### Swap Flow
 
-Items can only be edited/deleted when not SWAPPED.
+1. User creates swap request (with or without offered item)
+2. Item owner receives notification
+3. Owner accepts/rejects
+4. If accepted:
+   - Items marked as SWAPPED
+   - Points transferred (if redemption)
+   - Swap record created
+   - Other requests cancelled
 
-## Next Steps
+### Points Flow
 
-Phase 4 will implement:
+- Earn: When someone takes your item (+10 to +50 points)
+- Spend: When redeeming items (-10 to -50 points)
+- Balance: Tracked in user record and transaction history
 
-- Swap request system
-- Direct item-to-item swaps
-- Point-based redemptions
-- Swap history tracking
+## Production Deployment
+
+The backend API is feature-complete with all core functionality implemented:
+
+- ✅ Authentication & User Management
+- ✅ Item Management & Moderation
+- ✅ Swap & Points System
+- ✅ Admin Dashboard
+
+For production deployment, consider:
+
+- Setting up proper database backups
+- Implementing rate limiting
+- Adding monitoring and logging
+- Configuring HTTPS
+- Setting up CI/CD pipeline
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
