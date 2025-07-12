@@ -111,3 +111,10 @@ This is a hackathon project. For contribution guidelines and more information, p
 ## 📄 License
 
 This project is created for a hackathon. License details to be determined.
+
+## Team members
+
+- Uttam Sutariya (uttamsutariya.dev@gmail.com)
+- Keval Rabadiya (kevalrabadiya27@gmail.com)
+- Dhrumil Bhut (dhrumilbhut@gmail.com)
+- Radhika Patel (patelradhi1710@gmail.com)
