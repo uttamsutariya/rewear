@@ -73,33 +73,6 @@ export function Footer() {
 						</ul>
 					</div>
 
-					{/* Support */}
-					<div>
-						<h3 className="text-white font-semibold mb-4">Support</h3>
-						<ul className="space-y-2">
-							<li>
-								<Link to="/help" className="hover:text-primary-400 transition-colors">
-									Help Center
-								</Link>
-							</li>
-							<li>
-								<Link to="/terms" className="hover:text-primary-400 transition-colors">
-									Terms of Service
-								</Link>
-							</li>
-							<li>
-								<Link to="/privacy" className="hover:text-primary-400 transition-colors">
-									Privacy Policy
-								</Link>
-							</li>
-							<li>
-								<Link to="/contact" className="hover:text-primary-400 transition-colors">
-									Contact Us
-								</Link>
-							</li>
-						</ul>
-					</div>
-
 					{/* Contact */}
 					<div>
 						<h3 className="text-white font-semibold mb-4">Get in Touch</h3>

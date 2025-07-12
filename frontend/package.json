@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.83.0",
+    "@workos-inc/authkit-react": "^0.11.0",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
