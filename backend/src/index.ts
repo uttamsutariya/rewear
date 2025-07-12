@@ -31,13 +31,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 if (config.isDevelopment) {
-	app.use((req, res, next) => {
+	app.use((req, _res, next) => {
 		console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
 		next();
 	});
 }
 
-app.get("/api/health", async (req, res) => {
+app.get("/api/health", async (_req, res) => {
 	try {
 		await prisma.$queryRaw`SELECT 1`;
 
@@ -74,7 +74,7 @@ app.use((req, res) => {
 	});
 });
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
 	console.error("Error:", err);
 
 	// Handle custom AppError
@@ -98,7 +98,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 	const statusCode = err.statusCode || 500;
 	const message = err.message || "An unexpected error occurred";
 
-	sendError(res, "Internal Server Error", message, statusCode, config.isDevelopment ? { stack: err.stack } : undefined);
+	 return sendError(res, "Internal Server Error", message, statusCode, config.isDevelopment ? { stack: err.stack } : undefined);
 });
 
 async function ensureDatabaseConnection() {
