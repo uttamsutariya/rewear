@@ -29,9 +29,6 @@ Thumbs.db
 coverage/
 .nyc_output/
 
-# Prisma
-prisma/migrations/
-
 # Uploads (if storing locally)
 uploads/
 public/uploads/
