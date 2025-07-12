@@ -6,6 +6,10 @@ import { prisma } from "./config/database";
 import { AppError } from "./utils/errors";
 import { sendError } from "./utils/responses";
 
+// Import routes
+import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/users.routes";
+
 // Create Express app
 const app = express();
 
@@ -48,9 +52,11 @@ app.get("/api/health", async (req, res) => {
 	}
 });
 
-// API Routes (to be added in subsequent phases)
-// app.use("/api/auth", authRoutes);
-// app.use("/api/users", userRoutes);
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+
+// Future routes (to be implemented)
 // app.use("/api/items", itemRoutes);
 // app.use("/api/swaps", swapRoutes);
 // app.use("/api/points", pointRoutes);

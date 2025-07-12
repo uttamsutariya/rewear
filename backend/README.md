@@ -34,7 +34,7 @@ npm install
 ```env
 # Server Configuration
 NODE_ENV=development
-PORT=5000
+PORT=8080
 
 # Database
 DATABASE_URL=postgresql://username:password@localhost:5432/rewear_db
@@ -42,7 +42,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/rewear_db
 # WorkOS Authentication
 WORKOS_API_KEY=your_workos_api_key
 WORKOS_CLIENT_ID=your_workos_client_id
-WORKOS_REDIRECT_URI=http://localhost:5173/auth/callback
+WORKOS_REDIRECT_URI=http://localhost:5173/callback
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:5173
@@ -79,10 +79,20 @@ The database includes the following models:
 - **Swap**: Completed exchanges
 - **PointTransaction**: Point earning/redemption history
 
-## API Structure (To be implemented)
+## API Structure
 
+### Implemented Routes
+
+- `/api/health` - Health check
 - `/api/auth` - Authentication endpoints
+  - `GET /api/auth/me` - Get current user
+  - `POST /api/auth/logout` - Logout
 - `/api/users` - User management
+  - `GET /api/users/profile` - Get authenticated user's full profile
+  - `GET /api/users/:id` - Get public user profile
+
+### To Be Implemented
+
 - `/api/items` - Item CRUD operations
 - `/api/swaps` - Swap requests and management
 - `/api/points` - Points transactions
@@ -98,3 +108,20 @@ The database includes the following models:
 - `npm run prisma:migrate` - Run database migrations
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
+
+## Authentication Flow
+
+1. Frontend authenticates user via WorkOS AuthKit
+2. Frontend receives JWT token from WorkOS
+3. Frontend includes JWT in `Authorization: Bearer <token>` header
+4. Backend verifies JWT and creates/updates user in database
+5. User object is attached to request for protected routes
+
+## Next Steps
+
+Phase 3 will implement:
+
+- Item CRUD operations
+- Image URL validation
+- Item search and filtering
+- Category management
