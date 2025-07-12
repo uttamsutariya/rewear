@@ -3,12 +3,10 @@ import { Request } from "express";
 import { config } from "../config/env";
 import { ValidationError } from "../utils/errors";
 
-// Configure multer for memory storage
 const storage = multer.memoryStorage();
 
 // File filter to validate file types
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-	// Check file mimetype
 	if (config.upload.allowedMimeTypes.includes(file.mimetype)) {
 		cb(null, true);
 	} else {

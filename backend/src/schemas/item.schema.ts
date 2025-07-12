@@ -1,13 +1,11 @@
 import { z } from "zod";
 import { ItemStatus } from "@prisma/client";
 
-// Define allowed values
 const CATEGORIES = ["Men", "Women", "Kids", "Unisex"] as const;
 const TYPES = ["Shirt", "Pants", "Dress", "Jacket", "Shoes", "Accessories", "Other"] as const;
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"] as const;
 const CONDITIONS = ["New", "Like New", "Good", "Fair", "Poor"] as const;
 
-// Schema for creating a new item
 export const createItemSchema = z.object({
 	title: z
 		.string()
@@ -56,10 +54,8 @@ export const createItemSchema = z.object({
 		),
 });
 
-// Schema for updating an item (all fields optional)
 export const updateItemSchema = createItemSchema.partial();
 
-// Schema for query parameters when listing items
 export const listItemsQuerySchema = z.object({
 	category: z.enum(CATEGORIES).optional(),
 	type: z.enum(TYPES).optional(),
@@ -75,19 +71,16 @@ export const listItemsQuerySchema = z.object({
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-// Schema for admin actions
 export const updateItemStatusSchema = z.object({
 	status: z.enum(["APPROVED", "REJECTED"]),
-	reason: z.string().optional(), // Reason for rejection
+	reason: z.string().optional(),
 });
 
-// Export types
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 export type ListItemsQuery = z.infer<typeof listItemsQuerySchema>;
 export type UpdateItemStatusInput = z.infer<typeof updateItemStatusSchema>;
 
-// Export constants for use in frontend
 export const ITEM_CONSTANTS = {
 	CATEGORIES,
 	TYPES,

@@ -102,7 +102,6 @@ export class UploadService {
 			await cloudinary.uploader.destroy(publicId);
 		} catch (error) {
 			console.error("Failed to delete image from Cloudinary:", error);
-			// Don't throw error for deletion failures
 		}
 	}
 
@@ -114,7 +113,6 @@ export class UploadService {
 		if (!publicIds || publicIds.length === 0) return;
 
 		try {
-			// Delete in parallel
 			const deletePromises = publicIds.map((id) => this.deleteImage(id));
 			await Promise.all(deletePromises);
 		} catch (error) {

@@ -4,10 +4,8 @@ import { UnauthorizedError } from "../utils/errors";
 import jwt, { JwtHeader } from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 
-// Initialize WorkOS client
 const workos = new WorkOS(config.workos.apiKey);
 
-// JWKS client for verifying JWT tokens
 const jwks = jwksClient({
 	jwksUri: `https://api.workos.com/sso/jwks/${config.workos.clientId}`,
 	cache: true,
@@ -42,7 +40,6 @@ export class WorkOSService {
 	 */
 	static async verifyToken(token: string): Promise<WorkOSUser> {
 		try {
-			// First decode the token to get the header
 			const decoded = jwt.decode(token, { complete: true });
 			if (!decoded || typeof decoded === "string") {
 				throw new UnauthorizedError("Invalid token format");
@@ -59,7 +56,6 @@ export class WorkOSService {
 				});
 			};
 
-			// Verify the token
 			return new Promise((resolve, reject) => {
 				jwt.verify(
 					token,
