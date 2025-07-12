@@ -16,6 +16,7 @@ PENDING → APPROVED → AVAILABLE → SWAPPED
 - **APPROVED**: Admin has approved but status transitions to AVAILABLE
 - **AVAILABLE**: Item is visible and can be swapped
 - **REJECTED**: Admin rejected the item
+
 - **SWAPPED**: Item has been exchanged (terminal state)
 
 ## Image Upload Flow
