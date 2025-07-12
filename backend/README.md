@@ -83,6 +83,13 @@ This phase includes:
 
 See [Admin API Documentation](./docs/admin-api.md) for detailed documentation.
 
+## Full Stack Documentation
+
+For comprehensive documentation:
+
+- [Full Stack API Reference & Frontend Implementation Guide](./docs/full-stack-api-reference.md)
+- [API Quick Reference](./docs/api-quick-reference.md) - Quick lookup for all endpoints
+
 ### Key Features:
 
 - **Two Exchange Methods**: Direct swaps or point redemptions
