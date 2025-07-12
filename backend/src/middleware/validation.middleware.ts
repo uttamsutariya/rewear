@@ -11,7 +11,6 @@ import { sendError } from "../utils/responses";
 export const validate = (schema: AnyZodObject, source: "body" | "query" | "params" = "body") => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Validate the request data
 			const validated = await schema.parseAsync(req[source]);
 
 			// Replace the request data with validated/transformed data
@@ -20,7 +19,6 @@ export const validate = (schema: AnyZodObject, source: "body" | "query" | "param
 			next();
 		} catch (error) {
 			if (error instanceof ZodError) {
-				// Format Zod errors nicely
 				const errors = error.errors.map((err) => ({
 					field: err.path.join("."),
 					message: err.message,

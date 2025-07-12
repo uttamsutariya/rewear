@@ -105,9 +105,7 @@ router.get("/:id", authenticate, async (req, res, next) => {
 		const { id } = req.params;
 		const item = await ItemService.getItemById(id);
 
-		// Only show available items to public
 		if (item.status !== "AVAILABLE") {
-			// Check if user is authenticated and is owner/admin
 			if (!req.user || (req.user.id !== item.userId && !req.user.isAdmin)) {
 				return sendSuccess(res, null, "Item not found");
 			}

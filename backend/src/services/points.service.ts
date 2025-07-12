@@ -18,7 +18,7 @@ export class PointsService {
 	 * @returns Points value
 	 */
 	static calculateItemPoints(condition: string): number {
-		return this.POINTS_BY_CONDITION[condition] || 30; // Default to 30 if condition not found
+		return this.POINTS_BY_CONDITION[condition] || 30;
 	}
 
 	/**
@@ -48,7 +48,6 @@ export class PointsService {
 	 * @returns Updated user points balance
 	 */
 	static async awardPoints(userId: string, itemId: string, points: number): Promise<number> {
-		// Create point transaction
 		await prisma.pointTransaction.create({
 			data: {
 				userId,
@@ -58,7 +57,6 @@ export class PointsService {
 			},
 		});
 
-		// Update user points balance
 		const updatedUser = await prisma.user.update({
 			where: { id: userId },
 			data: {
@@ -80,13 +78,11 @@ export class PointsService {
 	 * @returns Updated user points balance
 	 */
 	static async deductPoints(userId: string, itemId: string, points: number): Promise<number> {
-		// Check if user has enough points
 		const hasEnoughPoints = await this.checkUserPoints(userId, points);
 		if (!hasEnoughPoints) {
 			throw new ValidationError("Insufficient points for this redemption");
 		}
 
-		// Create point transaction (negative amount for redemption)
 		await prisma.pointTransaction.create({
 			data: {
 				userId,
@@ -96,7 +92,6 @@ export class PointsService {
 			},
 		});
 
-		// Update user points balance
 		const updatedUser = await prisma.user.update({
 			where: { id: userId },
 			data: {
@@ -153,7 +148,6 @@ export class PointsService {
 			prisma.pointTransaction.count({ where }),
 		]);
 
-		// Calculate totals
 		const totals = await prisma.pointTransaction.groupBy({
 			by: ["type"],
 			where: { userId },

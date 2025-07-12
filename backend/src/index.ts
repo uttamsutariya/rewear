@@ -111,7 +111,6 @@ async function ensureDatabaseConnection() {
 	}
 }
 
-// Start server
 const startServer = async () => {
 	try {
 		await ensureDatabaseConnection();

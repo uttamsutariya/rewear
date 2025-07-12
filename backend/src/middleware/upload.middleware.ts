@@ -24,7 +24,6 @@ export const uploadImages = multer({
 	},
 }).array("images", config.upload.maxFiles);
 
-// Error handler for multer
 export const handleUploadError = (error: any): string => {
 	if (error instanceof multer.MulterError) {
 		switch (error.code) {
