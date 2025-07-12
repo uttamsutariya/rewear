@@ -37,7 +37,6 @@ export class UploadService {
 								fetch_format: "auto",
 							},
 						],
-						// Add image optimizations
 						flags: "attachment:false",
 						use_filename: false,
 						unique_filename: true,
@@ -80,7 +79,6 @@ export class UploadService {
 		}
 
 		try {
-			// Upload all images in parallel
 			const uploadPromises = files.map((file) => this.uploadImage(file));
 			const results = await Promise.all(uploadPromises);
 			return results;

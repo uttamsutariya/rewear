@@ -9,7 +9,6 @@ import { WorkOSService } from "../services/workos.service";
  */
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
-		// Extract token from Authorization header
 		const authHeader = req.headers.authorization;
 		if (!authHeader || !authHeader.startsWith("Bearer ")) {
 			throw new UnauthorizedError("No token provided");
@@ -20,12 +19,10 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 		// Verify token with WorkOS
 		const workosUser = await WorkOSService.verifyToken(token);
 
-		// Find or create user in our database
 		let user = await prisma.user.findUnique({
 			where: { email: workosUser.email },
 		});
 
-		// If user doesn't exist, create them
 		if (!user) {
 			try {
 				user = await prisma.user.create({
@@ -48,17 +45,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 					});
 
 					if (!user) {
-						// This should not happen, but handle it just in case
 						throw new UnauthorizedError("Failed to create or find user");
 					}
 				} else {
-					// Other database errors
 					throw error;
 				}
 			}
 		}
 
-		// Attach user to request
 		req.user = user;
 		next();
 	} catch (error) {

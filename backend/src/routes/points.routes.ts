@@ -95,7 +95,6 @@ router.get("/calculate/:itemId", async (req, res, next) => {
 	}
 });
 
-// Import prisma here to avoid circular dependency
 import { prisma } from "../config/database";
 
 export default router;

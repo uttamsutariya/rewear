@@ -29,12 +29,10 @@ export const requireOwnership = (getResourceOwnerId: (req: Request) => Promise<s
 				throw new UnauthorizedError("Authentication required");
 			}
 
-			// Admin users can access any resource
 			if (req.user.isAdmin) {
 				return next();
 			}
 
-			// Get the owner ID of the resource
 			const ownerId = await getResourceOwnerId(req);
 
 			if (!ownerId) {

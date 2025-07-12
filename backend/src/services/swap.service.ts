@@ -20,7 +20,6 @@ export class SwapService {
 	static async createSwapRequest(requesterId: string, data: CreateSwapRequestInput): Promise<SwapRequest> {
 		const { itemId, offeredItemId } = data;
 
-		// Validate requested item exists and is available
 		const requestedItem = await prisma.item.findUnique({
 			where: { id: itemId },
 			include: { user: true },
@@ -34,12 +33,10 @@ export class SwapService {
 			throw new ValidationError("Item is not available for swapping");
 		}
 
-		// Can't request own item
 		if (requestedItem.userId === requesterId) {
 			throw new ValidationError("Cannot request your own item");
 		}
 
-		// If offering an item, validate it
 		if (offeredItemId) {
 			const offeredItem = await prisma.item.findUnique({
 				where: { id: offeredItemId },
@@ -58,7 +55,6 @@ export class SwapService {
 			}
 		}
 
-		// Check for existing pending request
 		const existingRequest = await prisma.swapRequest.findFirst({
 			where: {
 				requesterId,
@@ -71,7 +67,6 @@ export class SwapService {
 			throw new ConflictError("You already have a pending request for this item");
 		}
 
-		// Create swap request
 		const swapRequest = await prisma.swapRequest.create({
 			data: {
 				requesterId,
@@ -101,8 +96,6 @@ export class SwapService {
 			},
 		});
 
-		// TODO: Send notification to item owner
-
 		return swapRequest;
 	}
 
@@ -115,7 +108,6 @@ export class SwapService {
 	static async createPointRedemption(requesterId: string, data: CreatePointRedemptionInput): Promise<SwapRequest> {
 		const { itemId } = data;
 
-		// Validate item
 		const item = await prisma.item.findUnique({
 			where: { id: itemId },
 			include: { user: true },
@@ -133,16 +125,13 @@ export class SwapService {
 			throw new ValidationError("Cannot redeem your own item");
 		}
 
-		// Calculate required points
 		const requiredPoints = PointsService.calculateItemPoints(item.condition);
 
-		// Check if user has enough points
 		const hasEnoughPoints = await PointsService.checkUserPoints(requesterId, requiredPoints);
 		if (!hasEnoughPoints) {
 			throw new ValidationError(`Insufficient points. This item requires ${requiredPoints} points.`);
 		}
 
-		// Check for existing pending request
 		const existingRequest = await prisma.swapRequest.findFirst({
 			where: {
 				requesterId,
@@ -155,7 +144,6 @@ export class SwapService {
 			throw new ConflictError("You already have a pending request for this item");
 		}
 
-		// Create redemption request (no offered item)
 		const swapRequest = await prisma.swapRequest.create({
 			data: {
 				requesterId,
@@ -185,8 +173,6 @@ export class SwapService {
 			},
 		});
 
-		// TODO: Send notification to item owner
-
 		return swapRequest;
 	}
 
@@ -202,7 +188,6 @@ export class SwapService {
 		ownerId: string,
 		response: RespondToSwapRequestInput,
 	): Promise<any> {
-		// Get swap request with all related data
 		const swapRequest = await prisma.swapRequest.findUnique({
 			where: { id: swapRequestId },
 			include: {
@@ -215,17 +200,14 @@ export class SwapService {
 			throw new NotFoundError("Swap request not found");
 		}
 
-		// Verify ownership
 		if (swapRequest.item.userId !== ownerId) {
 			throw new ForbiddenError("You can only respond to requests for your own items");
 		}
 
-		// Check request status
 		if (swapRequest.status !== SwapRequestStatus.PENDING) {
 			throw new ValidationError("This request has already been processed");
 		}
 
-		// Handle rejection
 		if (response.action === "reject") {
 			const updatedRequest = await prisma.swapRequest.update({
 				where: { id: swapRequestId },
@@ -234,16 +216,11 @@ export class SwapService {
 				},
 			});
 
-			// TODO: Send notification to requester
-
 			return updatedRequest;
 		}
 
-		// Handle acceptance
 		if (response.action === "accept") {
-			// Use transaction to ensure data consistency
 			const result = await prisma.$transaction(async (tx) => {
-				// Update swap request status
 				const updatedRequest = await tx.swapRequest.update({
 					where: { id: swapRequestId },
 					data: {
@@ -251,20 +228,17 @@ export class SwapService {
 					},
 				});
 
-				// Determine swap type and items involved
 				const isPointRedemption = !swapRequest.offeredItemId;
 				let itemGivenId: string;
 				let itemReceivedId: string;
 
 				if (isPointRedemption) {
-					// Point redemption: requester gets owner's item
 					itemGivenId = swapRequest.itemId; // Owner gives their item
 					itemReceivedId = swapRequest.itemId; // Requester receives it
 
 					// Calculate points
 					const points = PointsService.calculateItemPoints(swapRequest.item.condition);
 
-					// Check if requester has enough points
 					const requester = await tx.user.findUnique({
 						where: { id: swapRequest.requesterId },
 						select: { points: true },
@@ -274,7 +248,6 @@ export class SwapService {
 						throw new ValidationError("Requester no longer has enough points for this redemption");
 					}
 
-					// Deduct points from requester (using transaction context)
 					await tx.pointTransaction.create({
 						data: {
 							userId: swapRequest.requesterId,
@@ -293,7 +266,6 @@ export class SwapService {
 						},
 					});
 
-					// Award points to owner (using transaction context)
 					await tx.pointTransaction.create({
 						data: {
 							userId: swapRequest.item.userId,
@@ -312,17 +284,14 @@ export class SwapService {
 						},
 					});
 
-					// Update item status
 					await tx.item.update({
 						where: { id: swapRequest.itemId },
 						data: { status: ItemStatus.SWAPPED },
 					});
 				} else {
-					// Direct swap: exchange items
 					itemGivenId = swapRequest.offeredItemId!;
 					itemReceivedId = swapRequest.itemId;
 
-					// Update both items' status
 					await tx.item.updateMany({
 						where: {
 							id: {
@@ -333,7 +302,6 @@ export class SwapService {
 					});
 				}
 
-				// Create swap record
 				const swap = await tx.swap.create({
 					data: {
 						swapRequestId: swapRequest.id,
@@ -362,7 +330,6 @@ export class SwapService {
 					},
 				});
 
-				// Reject all other pending requests for these items
 				await tx.swapRequest.updateMany({
 					where: {
 						AND: [
@@ -385,8 +352,6 @@ export class SwapService {
 						status: SwapRequestStatus.CANCELLED,
 					},
 				});
-
-				// TODO: Send notifications to all affected users
 
 				return {
 					swapRequest: updatedRequest,
@@ -441,7 +406,6 @@ export class SwapService {
 	static async listSwapRequests(userId: string, query: ListSwapRequestsQuery) {
 		const { type, status, page, limit } = query;
 
-		// Build where clause based on type
 		let where: Prisma.SwapRequestWhereInput = {};
 
 		if (type === "sent") {
@@ -451,16 +415,13 @@ export class SwapService {
 				userId,
 			};
 		} else {
-			// "all" - both sent and received
 			where.OR = [{ requesterId: userId }, { item: { userId } }];
 		}
 
-		// Add status filter if provided
 		if (status) {
 			where.status = status;
 		}
 
-		// Execute query with pagination
 		const [requests, total] = await Promise.all([
 			prisma.swapRequest.findMany({
 				where,
@@ -492,7 +453,6 @@ export class SwapService {
 			prisma.swapRequest.count({ where }),
 		]);
 
-		// Add metadata to each request
 		const enrichedRequests = requests.map((request) => ({
 			...request,
 			isPointRedemption: !request.offeredItemId,
@@ -629,7 +589,6 @@ export class SwapService {
 			throw new NotFoundError("Swap request not found");
 		}
 
-		// Check if user is involved in this request
 		const isRequester = swapRequest.requesterId === userId;
 		const isOwner = swapRequest.item.userId === userId;
 
@@ -637,7 +596,6 @@ export class SwapService {
 			throw new ForbiddenError("You are not involved in this swap request");
 		}
 
-		// Calculate points if it's a redemption
 		const pointsRequired = !swapRequest.offeredItemId
 			? PointsService.calculateItemPoints(swapRequest.item.condition)
 			: null;

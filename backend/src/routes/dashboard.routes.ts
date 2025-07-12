@@ -15,10 +15,8 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 	try {
 		const userId = req.user!.id;
 
-		// Fetch all data in parallel for performance
 		const [userProfile, itemStats, swapStats, recentItems, pendingSwapRequests, recentPointTransactions] =
 			await Promise.all([
-				// User profile with points
 				prisma.user.findUnique({
 					where: { id: userId },
 					select: {
@@ -40,19 +38,16 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 
 				// Swap statistics
 				Promise.all([
-					// Sent swap requests by status
 					prisma.swapRequest.groupBy({
 						by: ["status"],
 						where: { requesterId: userId },
 						_count: true,
 					}),
-					// Received swap requests by status
 					prisma.swapRequest.groupBy({
 						by: ["status"],
 						where: { item: { userId } },
 						_count: true,
 					}),
-					// Completed swaps count
 					prisma.swap.count({
 						where: {
 							OR: [{ initiatorId: userId }, { receiverId: userId }],
@@ -60,7 +55,6 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 					}),
 				]),
 
-				// Recent items (last 5)
 				prisma.item.findMany({
 					where: { userId },
 					orderBy: { createdAt: "desc" },
@@ -81,7 +75,6 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 					},
 				}),
 
-				// Pending swap requests (both sent and received)
 				prisma.swapRequest.findMany({
 					where: {
 						status: SwapRequestStatus.PENDING,
@@ -124,7 +117,6 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 				}),
 			]);
 
-		// Process item statistics
 		const itemStatsMap = itemStats.reduce(
 			(acc, stat) => {
 				acc[stat.status] = stat._count;
@@ -133,7 +125,6 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 			{} as Record<string, number>,
 		);
 
-		// Process swap statistics
 		const [sentRequests, receivedRequests, completedSwaps] = swapStats;
 
 		const sentRequestsMap = sentRequests.reduce(
@@ -152,7 +143,6 @@ router.get("/", authenticate, requireAuth, async (req, res, next) => {
 			{} as Record<string, number>,
 		);
 
-		// Build dashboard response
 		const dashboardData = {
 			profile: userProfile,
 
@@ -228,7 +218,6 @@ router.get("/summary", authenticate, requireAuth, async (req, res, next) => {
 		const userId = req.user!.id;
 
 		const [itemCount, swapCount, pendingCount] = await Promise.all([
-			// Total available items
 			prisma.item.count({
 				where: {
 					userId,
@@ -236,14 +225,12 @@ router.get("/summary", authenticate, requireAuth, async (req, res, next) => {
 				},
 			}),
 
-			// Total completed swaps
 			prisma.swap.count({
 				where: {
 					OR: [{ initiatorId: userId }, { receiverId: userId }],
 				},
 			}),
 
-			// Pending requests to respond to
 			prisma.swapRequest.count({
 				where: {
 					item: { userId },

@@ -7,7 +7,6 @@ import { ItemStatus } from "@prisma/client";
 
 const router = Router();
 
-// All admin routes require authentication and admin role
 router.use(authenticate, requireAdmin);
 
 /**
@@ -17,9 +16,7 @@ router.use(authenticate, requireAdmin);
  */
 router.get("/stats", async (req, res, next) => {
 	try {
-		// Fetch all stats in parallel
 		const [totalUsers, itemStats] = await Promise.all([
-			// Total users count
 			prisma.user.count(),
 
 			// Items grouped by status
@@ -68,7 +65,6 @@ router.get("/items/pending", async (req, res, next) => {
 		const limitNum = Math.min(parseInt(limit as string), 100);
 		const skip = (pageNum - 1) * limitNum;
 
-		// Get pending items with user details
 		const [items, total] = await Promise.all([
 			prisma.item.findMany({
 				where: { status: ItemStatus.PENDING },
@@ -86,7 +82,7 @@ router.get("/items/pending", async (req, res, next) => {
 						},
 					},
 				},
-				orderBy: { createdAt: "asc" }, // Oldest first for FIFO processing
+				orderBy: { createdAt: "asc" },
 				skip,
 				take: limitNum,
 			}),
@@ -122,7 +118,6 @@ router.get("/items", async (req, res, next) => {
 		const limitNum = Math.min(parseInt(limit as string), 100);
 		const skip = (pageNum - 1) * limitNum;
 
-		// Build where clause
 		const where: any = {};
 
 		if (status) {
@@ -140,7 +135,6 @@ router.get("/items", async (req, res, next) => {
 			];
 		}
 
-		// Get items with user details
 		const [items, total] = await Promise.all([
 			prisma.item.findMany({
 				where,
