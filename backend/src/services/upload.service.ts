@@ -20,12 +20,10 @@ export class UploadService {
 	 */
 	static async uploadImage(file: Express.Multer.File): Promise<UploadResult> {
 		try {
-			// Generate unique filename
 			const uniqueSuffix = crypto.randomBytes(6).toString("hex");
 			const timestamp = Date.now();
 			const publicId = `${config.cloudinary.uploadFolder}/${timestamp}-${uniqueSuffix}`;
 
-			// Upload to Cloudinary
 			const result = await new Promise<any>((resolve, reject) => {
 				const uploadStream = cloudinary.uploader.upload_stream(
 					{
@@ -87,8 +85,6 @@ export class UploadService {
 			const results = await Promise.all(uploadPromises);
 			return results;
 		} catch (error) {
-			// If any upload fails, we should consider cleaning up successful uploads
-			// For now, we'll just throw the error
 			throw error;
 		}
 	}
