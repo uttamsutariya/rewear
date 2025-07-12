@@ -7,7 +7,7 @@ import { WorkOSService } from "../services/workos.service";
  * Authentication middleware that verifies WorkOS JWT tokens
  * and ensures the user exists in our database
  */
-export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticate = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const authHeader = req.headers.authorization;
 		if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -64,7 +64,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
  * Optional middleware to require authentication
  * Use this for routes that must have an authenticated user
  */
-export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const requireAuth = (req: Request, _res: Response, next: NextFunction): void => {
 	if (!req.user) {
 		throw new UnauthorizedError("Authentication required");
 	}
