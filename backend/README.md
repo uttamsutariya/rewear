@@ -8,9 +8,10 @@ Backend API for the ReWear community clothing exchange platform.
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: WorkOS (JWT verification)
 - **Validation**: Zod
-- **Image Storage**: Cloudinary (URLs only, uploads handled client-side)
+- **Image Storage**: Cloudinary (backend-controlled uploads)
+- **File Upload**: Multer
 
-## Phase 1 Setup Complete ✅
+## ✅ Phase 1 Setup Complete
 
 This phase includes:
 
@@ -20,6 +21,39 @@ This phase includes:
 - Response helpers
 - Environment configuration
 - Basic health check endpoint
+
+## ✅ Phase 2 Authentication Complete
+
+This phase includes:
+
+- WorkOS JWT token verification
+- Authentication middleware with automatic user creation
+- Race condition handling for concurrent user creation
+- Authorization middleware for admin and resource ownership
+- Protected route examples
+- Auth endpoints (`/api/auth/me`, `/api/auth/logout`)
+- User endpoints (`/api/users/profile`, `/api/users/:id`)
+
+See [Authentication Guide](./docs/authentication.md) for detailed documentation.
+
+## ✅ Phase 3 Item Management Complete
+
+This phase includes:
+
+- Image upload endpoints with Cloudinary integration
+- Complete item CRUD operations
+- Item search, filtering, and pagination
+- Admin moderation workflow (approve/reject items)
+- Zod validation for all inputs
+- Category and size management
+
+### Key Features:
+
+- **Controlled Image Uploads**: Images go through backend before Cloudinary
+- **Item Status Workflow**: PENDING → APPROVED/REJECTED → AVAILABLE → SWAPPED
+- **Advanced Search**: Filter by category, type, size, condition, tags
+- **Admin Controls**: Approve/reject items, view all items
+- **Owner Controls**: Edit/delete own items (with restrictions)
 
 ## Installation
 
@@ -47,8 +81,15 @@ WORKOS_REDIRECT_URI=http://localhost:5173/callback
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:5173
 
-# Cloudinary (optional - for reference)
+# Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+CLOUDINARY_UPLOAD_FOLDER=rewear/items
+
+# Upload Limits
+MAX_FILE_SIZE=10485760  # 10MB in bytes
+MAX_FILES=5
 ```
 
 3. Generate Prisma client:
@@ -69,34 +110,44 @@ npm run prisma:migrate
 npm run dev
 ```
 
-## Database Schema
-
-The database includes the following models:
-
-- **User**: Stores user information (no passwords, using WorkOS)
-- **Item**: Clothing items with status workflow
-- **SwapRequest**: Requests for item exchanges
-- **Swap**: Completed exchanges
-- **PointTransaction**: Point earning/redemption history
-
 ## API Structure
 
 ### Implemented Routes
 
-- `/api/health` - Health check
-- `/api/auth` - Authentication endpoints
-  - `GET /api/auth/me` - Get current user
-  - `POST /api/auth/logout` - Logout
-- `/api/users` - User management
-  - `GET /api/users/profile` - Get authenticated user's full profile
-  - `GET /api/users/:id` - Get public user profile
+#### Authentication
+
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/logout` - Logout
+
+#### Users
+
+- `GET /api/users/profile` - Get authenticated user's full profile
+- `GET /api/users/:id` - Get public user profile
+
+#### Upload
+
+- `POST /api/upload/image` - Upload single image to Cloudinary
+- `POST /api/upload/images` - Upload multiple images to Cloudinary
+
+#### Items
+
+- `GET /api/items/constants` - Get categories, types, sizes, conditions
+- `GET /api/items/featured` - Get featured items
+- `GET /api/items` - List available items (with filters)
+- `GET /api/items/all` - List all items (admin only)
+- `GET /api/items/user/:userId` - Get user's items
+- `POST /api/items` - Create new item
+- `GET /api/items/:id` - Get item details
+- `PUT /api/items/:id` - Update item
+- `DELETE /api/items/:id` - Delete item
+- `POST /api/items/:id/approve` - Approve item (admin)
+- `POST /api/items/:id/reject` - Reject item (admin)
 
 ### To Be Implemented
 
-- `/api/items` - Item CRUD operations
 - `/api/swaps` - Swap requests and management
 - `/api/points` - Points transactions
-- `/api/admin` - Admin operations
+- `/api/admin` - Admin dashboard data
 - `/api/dashboard` - User dashboard data
 
 ## Development Scripts
@@ -109,19 +160,27 @@ The database includes the following models:
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
-## Authentication Flow
+## Upload Flow
 
-1. Frontend authenticates user via WorkOS AuthKit
-2. Frontend receives JWT token from WorkOS
-3. Frontend includes JWT in `Authorization: Bearer <token>` header
-4. Backend verifies JWT and creates/updates user in database
-5. User object is attached to request for protected routes
+1. Frontend sends images to `/api/upload/images`
+2. Backend validates file types and sizes
+3. Backend uploads to Cloudinary
+4. Backend returns Cloudinary URLs
+5. Frontend uses URLs when creating item
+
+## Item Workflow
+
+1. User creates item → Status: PENDING
+2. Admin approves → Status: AVAILABLE
+3. Item gets swapped → Status: SWAPPED
+
+Items can only be edited/deleted when not SWAPPED.
 
 ## Next Steps
 
-Phase 3 will implement:
+Phase 4 will implement:
 
-- Item CRUD operations
-- Image URL validation
-- Item search and filtering
-- Category management
+- Swap request system
+- Direct item-to-item swaps
+- Point-based redemptions
+- Swap history tracking
