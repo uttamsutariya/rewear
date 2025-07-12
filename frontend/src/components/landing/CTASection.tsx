@@ -37,10 +37,11 @@ export function CTASection() {
 							<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
 						</Link>
 						<Link
-							to="/items/new"
-							className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold transition-all duration-200 hover:bg-white hover:text-primary-600 hover:shadow-xl hover:scale-105 active:scale-95 inline-flex items-center justify-center"
+							to="/browse"
+							className="inline-flex items-center gap-2 bg-white text-primary-700 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-50 hover:scale-105 transform transition-all duration-200 shadow-lg"
 						>
-							List Your First Item
+							Start Exploring
+							<ArrowRight className="h-5 w-5" />
 						</Link>
 					</div>
 
