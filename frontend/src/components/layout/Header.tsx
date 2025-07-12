@@ -1,12 +1,24 @@
 import { Link } from "react-router-dom";
-import { Menu, X, Leaf, User, LogOut } from "lucide-react";
+import { Menu, X, Leaf, User, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
-import { cn } from "../../lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../lib/api-client";
+
+const ADMIN_EMAIL = "uttamsutariya.dev@gmail.com";
 
 export function Header() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const { user, isLoading, signOut } = useAuth();
+
+	// Fetch user profile to get email
+	const { data: profileData } = useQuery({
+		queryKey: ["user-profile", user?.email],
+		queryFn: () => api.users.profile(),
+		enabled: !!user,
+	});
+
+	const isAdmin = profileData?.data?.email === ADMIN_EMAIL;
 
 	return (
 		<header className="fixed top-0 left-0 right-0 z-50 glass-effect">
@@ -23,12 +35,15 @@ export function Header() {
 						<Link to="/browse" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
 							Browse
 						</Link>
-						<Link to="/how-it-works" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-							How It Works
-						</Link>
-						<Link to="/about" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-							About
-						</Link>
+						{isAdmin && (
+							<Link
+								to="/admin"
+								className="text-orange-600 hover:text-orange-700 font-medium transition-colors flex items-center gap-1"
+							>
+								<Shield className="h-4 w-4" />
+								Admin
+							</Link>
+						)}
 					</div>
 
 					{/* Auth Buttons - Desktop */}
@@ -51,6 +66,12 @@ export function Header() {
 											<User className="h-4 w-4 mr-2" />
 											My Dashboard
 										</Link>
+										{isAdmin && (
+											<Link to="/admin" className="flex items-center px-4 py-2 text-orange-600 hover:bg-orange-50">
+												<Shield className="h-4 w-4 mr-2" />
+												Admin Panel
+											</Link>
+										)}
 										<button
 											onClick={() => signOut()}
 											className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50"
@@ -110,6 +131,15 @@ export function Header() {
 									>
 										Dashboard
 									</Link>
+									{isAdmin && (
+										<Link
+											to="/admin"
+											className="block px-4 py-2 text-orange-600 font-medium hover:bg-orange-50 rounded-lg flex items-center gap-2"
+										>
+											<Shield className="h-4 w-4" />
+											Admin Panel
+										</Link>
+									)}
 									<button
 										onClick={() => signOut()}
 										className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
