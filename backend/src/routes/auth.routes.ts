@@ -9,7 +9,6 @@ const router = Router();
  * Get current authenticated user
  */
 router.get("/me", authenticate, (req, res) => {
-	// Remove sensitive fields before sending
 	const { createdAt, ...userWithoutSensitive } = req.user!;
 
 	sendSuccess(res, {

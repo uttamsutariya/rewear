@@ -41,7 +41,6 @@ export const requireOwnership = (getResourceOwnerId: (req: Request) => Promise<s
 				throw new ForbiddenError("Resource not found");
 			}
 
-			// Check if the current user owns the resource
 			if (ownerId !== req.user.id) {
 				throw new ForbiddenError("Access denied");
 			}

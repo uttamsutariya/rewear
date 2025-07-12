@@ -27,12 +27,10 @@ router.post(
 	},
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Check if files were uploaded
 			if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
 				throw new ValidationError("No images uploaded");
 			}
 
-			// Upload images to Cloudinary
 			const uploadResults = await UploadService.uploadImages(req.files as Express.Multer.File[]);
 
 			// Return only the URLs for simplicity
@@ -64,7 +62,6 @@ router.post(
 	authenticate,
 	requireAuth,
 	(req: Request, res: Response, next: NextFunction) => {
-		// Use single file upload
 		const singleUpload = uploadImages;
 		singleUpload(req, res, (err) => {
 			if (err) {
@@ -76,7 +73,6 @@ router.post(
 	},
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Check if file was uploaded
 			if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
 				throw new ValidationError("No image uploaded");
 			}
@@ -84,7 +80,6 @@ router.post(
 			// Take only the first file for single upload
 			const file = (req.files as Express.Multer.File[])[0];
 
-			// Upload image to Cloudinary
 			const uploadResult = await UploadService.uploadImage(file);
 
 			sendSuccess(

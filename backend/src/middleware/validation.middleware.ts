@@ -29,7 +29,6 @@ export const validate = (schema: AnyZodObject, source: "body" | "query" | "param
 				return sendError(res, "Validation Error", "Invalid request data", 400, { errors });
 			}
 
-			// Pass other errors to error handler
 			next(error);
 		}
 	};

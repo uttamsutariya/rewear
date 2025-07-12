@@ -6,16 +6,12 @@ import { prisma } from "./config/database";
 import { AppError } from "./utils/errors";
 import { sendError } from "./utils/responses";
 
-// Import routes
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/users.routes";
 import uploadRoutes from "./routes/upload.routes";
 import itemRoutes from "./routes/items.routes";
 
-// Create Express app
 const app = express();
-
-// Create HTTP server
 const server = require('http').createServer(app);
 
 // Middleware
