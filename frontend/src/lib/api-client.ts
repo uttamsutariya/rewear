@@ -1,26 +1,22 @@
 import { apiService } from "./api-service";
 import type { ApiResponse, Item, User, FeaturedItem, ItemConstants } from "../types";
 
-// Auth APIs
 export const api = {
 	auth: {
 		me: () => apiService.get<ApiResponse<{ user: User }>>("/auth/me"),
 		logout: () => apiService.post<ApiResponse<{ message: string }>>("/auth/logout"),
 	},
 
-	// User APIs
 	users: {
 		profile: () => apiService.get<ApiResponse<User>>("/users/profile"),
 		getById: (id: string) => apiService.get<ApiResponse<User>>(`/users/${id}`),
 	},
 
-	// Upload APIs
 	upload: {
 		images: (formData: FormData) =>
 			apiService.upload<ApiResponse<{ urls: string[]; count: number; message: string }>>("/upload/images", formData),
 	},
 
-	// Item APIs
 	items: {
 		getConstants: () => apiService.get<ApiResponse<ItemConstants>>("/items/constants"),
 		getFeatured: () => apiService.get<ApiResponse<FeaturedItem[]>>("/items/featured"),
@@ -67,7 +63,6 @@ export const api = {
 		reject: (id: string, reason: string) => apiService.post<ApiResponse<Item>>(`/items/${id}/reject`, { reason }),
 	},
 
-	// Swap APIs
 	swaps: {
 		createRequest: (data: { itemId: string; offeredItemId: string }) =>
 			apiService.post<ApiResponse<any>>("/swaps/requests", data),
@@ -85,7 +80,6 @@ export const api = {
 		history: () => apiService.get<ApiResponse<any[]>>("/swaps/history"),
 	},
 
-	// Points APIs
 	points: {
 		balance: () => apiService.get<ApiResponse<{ balance: number }>>("/points/balance"),
 		transactions: () => apiService.get<ApiResponse<any[]>>("/points/transactions"),
@@ -94,12 +88,10 @@ export const api = {
 			apiService.get<ApiResponse<{ points: number; condition: string }>>(`/points/calculate/${itemId}`),
 	},
 
-	// Dashboard API
 	dashboard: {
 		get: () => apiService.get<ApiResponse<any>>("/dashboard"),
 	},
 
-	// Admin APIs
 	admin: {
 		stats: () => apiService.get<ApiResponse<any>>("/admin/stats"),
 		pendingItems: (params?: { page?: number; limit?: number }) =>
@@ -107,5 +99,4 @@ export const api = {
 	},
 };
 
-// Export for backward compatibility
 export { apiService as apiClient } from "./api-service";

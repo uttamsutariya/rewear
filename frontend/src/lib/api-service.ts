@@ -22,7 +22,6 @@ class ApiService {
 	constructor() {
 		this.baseURL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-		// Create axios instance with base configuration
 		this.api = axios.create({
 			baseURL: this.baseURL + "/api",
 			timeout: 30000, // 30 seconds timeout
@@ -35,20 +34,17 @@ class ApiService {
 		this.setupInterceptors();
 	}
 
-	// Method to set the getAccessToken function from WorkOS
 	setAuthTokenGetter(getter: () => Promise<string | null>) {
 		console.log("Setting auth token getter in api service");
 		this.getAccessToken = getter;
 	}
 
-	// Method to set the signOut function from WorkOS
 	setSignOutFunction(signOutFn: () => void) {
 		this.signOut = signOutFn;
 	}
 
 	private setupInterceptors(): void {
 		console.log("Setting up interceptors");
-		// Request interceptor - automatically add auth token
 		this.api.interceptors.request.use(
 			async (config) => {
 				try {
@@ -67,7 +63,6 @@ class ApiService {
 					}
 				} catch (error) {
 					console.warn("Failed to get auth token:", error);
-					// Continue with request even if token fetch fails
 				}
 
 				return config;
@@ -77,7 +72,6 @@ class ApiService {
 			},
 		);
 
-		// Response interceptor - handle common responses and errors
 		this.api.interceptors.response.use(
 			(response: AxiosResponse) => {
 				return response;
@@ -95,22 +89,17 @@ class ApiService {
 		};
 
 		if (error.response) {
-			// Server responded with error status
 			const { status, data } = error.response;
 
-			// Check if this is a structured backend error
 			if (this.isStructuredBackendError(data)) {
 				return this.handleStructuredError(data as any);
 			}
 
-			// Handle regular HTTP errors (non-structured)
 			switch (status) {
 				case 401:
 					apiError.message = "Authentication required. Please log in again.";
 					apiError.code = "UNAUTHORIZED";
-					// Clear stored token
 					localStorage.removeItem("auth_token");
-					// Redirect to login page if we have signOut function
 					if (this.signOut) {
 						this.signOut();
 					}
@@ -144,18 +133,14 @@ class ApiService {
 
 			apiError.details = data;
 		} else if (error.request) {
-			// Network error
 			apiError.message = "Network error. Please check your connection and try again.";
 			apiError.code = "NETWORK_ERROR";
 		} else {
-			// Other error
 			apiError.message = error.message || "An unexpected error occurred";
 			apiError.code = "REQUEST_ERROR";
 		}
 
-		// Show toast notification for user-facing errors
 		if (!this.isSilentError(apiError.code)) {
-			// TODO: Implement toast notifications
 			console.error("API Error:", apiError);
 		}
 
@@ -163,26 +148,21 @@ class ApiService {
 	}
 
 	private isStructuredBackendError(data: any): boolean {
-		// Check if response has structured error format from backend
 		return data && typeof data === "object" && "error" in data && "message" in data;
 	}
 
 	private handleStructuredError(errorData: { error: string; message: string; details?: any }): Promise<never> {
 		const { error, message, details } = errorData;
 
-		// Check if this is an authentication error that requires logout
 		if (AUTH_ERROR_CODES.includes(error)) {
-			// Clear stored token
 			localStorage.removeItem("auth_token");
 
-			// Properly logout user and redirect to login
 			if (this.signOut) {
 				this.signOut();
 			}
 			window.location.href = "/login";
 		}
 
-		// Create API error for rejection
 		const apiError: ApiError = {
 			message: message,
 			code: error,
@@ -193,42 +173,35 @@ class ApiService {
 	}
 
 	private isSilentError(code?: string): boolean {
-		// Define which errors should not show toast notifications
 		const silentErrors = ["NOT_FOUND", "UNAUTHORIZED"];
 		return silentErrors.includes(code || "");
 	}
 
-	// Generic GET request
 	async get<T = any>(url: string, config?: any): Promise<T> {
 		const response = await this.api.get<T>(url, config);
 		return response.data;
 	}
 
-	// Generic POST request
 	async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
 		const response = await this.api.post<T>(url, data, config);
 		return response.data;
 	}
 
-	// Generic PUT request
 	async put<T = any>(url: string, data?: any, config?: any): Promise<T> {
 		const response = await this.api.put<T>(url, data, config);
 		return response.data;
 	}
 
-	// Generic PATCH request
 	async patch<T = any>(url: string, data?: any, config?: any): Promise<T> {
 		const response = await this.api.patch<T>(url, data, config);
 		return response.data;
 	}
 
-	// Generic DELETE request
 	async delete<T = any>(url: string, config?: any): Promise<T> {
 		const response = await this.api.delete<T>(url, config);
 		return response.data;
 	}
 
-	// File upload with multipart/form-data
 	async upload<T = any>(url: string, formData: FormData, config?: any): Promise<T> {
 		const response = await this.api.post<T>(url, formData, {
 			...config,
@@ -240,13 +213,11 @@ class ApiService {
 		return response.data;
 	}
 
-	// Get the raw axios instance if needed for advanced usage
 	getAxiosInstance(): AxiosInstance {
 		return this.api;
 	}
 }
 
-// Create and export a singleton instance
 export const apiService = new ApiService();
 
 // Error codes from backend
@@ -280,8 +251,6 @@ const ERROR_CODES = {
 // Error codes that require logout
 const AUTH_ERROR_CODES = [ERROR_CODES.INVALID_TOKEN, ERROR_CODES.MISSING_TOKEN, ERROR_CODES.TOKEN_EXPIRED];
 
-// Export types and constants
 export { ERROR_CODES };
 
-// Export the instance as default for convenience
 export default apiService;
