@@ -10,10 +10,121 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// User model for authentication
+// Enums
+enum ItemStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    AVAILABLE
+    SWAPPED
+}
+
+enum SwapRequestStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+    CANCELLED
+}
+
+enum TransactionType {
+    EARNED
+    REDEEMED
+}
+
+// User model - No password field as we use WorkOS
 model User {
-    id       String @id @default(cuid())
-    email    String @unique
-    password String
-    name     String
+    id        String   @id @default(uuid())
+    email     String   @unique
+    name      String
+    points    Int      @default(0)
+    isAdmin   Boolean  @default(false)
+    createdAt DateTime @default(now())
+
+    // Relations
+    items             Item[]
+    swapRequests      SwapRequest[]
+    initiatedSwaps    Swap[]             @relation("InitiatedSwaps")
+    receivedSwaps     Swap[]             @relation("ReceivedSwaps")
+    pointTransactions PointTransaction[]
+
+    @@map("users")
+}
+
+// Item model
+model Item {
+    id          String     @id @default(uuid())
+    userId      String
+    title       String
+    description String
+    category    String
+    type        String // e.g., Shirt, Pants
+    size        String // e.g., M, L, XL
+    condition   String // e.g., New, Used, Like New
+    tags        String[]
+    images      String[] // Cloudinary URLs
+    status      ItemStatus @default(PENDING)
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+
+    // Relations
+    user              User               @relation(fields: [userId], references: [id])
+    swapRequests      SwapRequest[]
+    swapsAsGiven      Swap[]             @relation("ItemGiven")
+    swapsAsReceived   Swap[]             @relation("ItemReceived")
+    pointTransactions PointTransaction[]
+
+    @@map("items")
+}
+
+// SwapRequest model
+model SwapRequest {
+    id            String            @id @default(uuid())
+    requesterId   String
+    itemId        String
+    offeredItemId String? // Nullable for point redemption
+    status        SwapRequestStatus @default(PENDING)
+    createdAt     DateTime          @default(now())
+
+    // Relations
+    requester User  @relation(fields: [requesterId], references: [id])
+    item      Item  @relation(fields: [itemId], references: [id])
+    swap      Swap?
+
+    @@map("swap_requests")
+}
+
+// Swap model - Completed exchanges
+model Swap {
+    id             String   @id @default(uuid())
+    swapRequestId  String   @unique
+    initiatorId    String
+    receiverId     String
+    itemGivenId    String
+    itemReceivedId String
+    completedAt    DateTime @default(now())
+
+    // Relations
+    swapRequest  SwapRequest @relation(fields: [swapRequestId], references: [id])
+    initiator    User        @relation("InitiatedSwaps", fields: [initiatorId], references: [id])
+    receiver     User        @relation("ReceivedSwaps", fields: [receiverId], references: [id])
+    itemGiven    Item        @relation("ItemGiven", fields: [itemGivenId], references: [id])
+    itemReceived Item        @relation("ItemReceived", fields: [itemReceivedId], references: [id])
+
+    @@map("swaps")
+}
+
+// PointTransaction model
+model PointTransaction {
+    id        String          @id @default(uuid())
+    userId    String
+    itemId    String
+    amount    Int // Positive for earned, negative for redeemed
+    type      TransactionType
+    createdAt DateTime        @default(now())
+
+    // Relations
+    user User @relation(fields: [userId], references: [id])
+    item Item @relation(fields: [itemId], references: [id])
+
+    @@map("point_transactions")
 }

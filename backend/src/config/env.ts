@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Validate required environment variables
-const requiredEnvVars = ["DATABASE_URL", "JWT_SECRET"];
+const requiredEnvVars = ["DATABASE_URL", "WORKOS_API_KEY", "WORKOS_CLIENT_ID", "CLOUDINARY_CLOUD_NAME"];
 
 for (const envVar of requiredEnvVars) {
 	if (!process.env[envVar]) {
@@ -14,7 +14,7 @@ for (const envVar of requiredEnvVars) {
 
 export const config = {
 	// Server
-	port: parseInt(process.env.PORT || "5000", 10),
+	port: parseInt(process.env.PORT || "8080", 10),
 	nodeEnv: process.env.NODE_ENV || "development",
 	isDevelopment: process.env.NODE_ENV === "development",
 	isProduction: process.env.NODE_ENV === "production",
@@ -22,23 +22,18 @@ export const config = {
 	// Database
 	databaseUrl: process.env.DATABASE_URL!,
 
-	// JWT
-	jwt: {
-		secret: process.env.JWT_SECRET!,
-		expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+	// WorkOS Authentication
+	workos: {
+		apiKey: process.env.WORKOS_API_KEY!,
+		clientId: process.env.WORKOS_CLIENT_ID!,
+		redirectUri: process.env.WORKOS_REDIRECT_URI || "http://localhost:5173/callback",
 	},
 
 	// CORS
 	frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
 
-	// File Upload
-	upload: {
-		maxFileSize: parseInt(process.env.MAX_FILE_SIZE || "5242880", 10),
-		allowedFileTypes: process.env.ALLOWED_FILE_TYPES?.split(",") || [
-			"image/jpeg",
-			"image/jpg",
-			"image/png",
-			"image/webp",
-		],
+	// Cloudinary (URLs stored only, upload handled client-side)
+	cloudinary: {
+		cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
 	},
 };
