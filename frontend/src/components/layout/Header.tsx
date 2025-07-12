@@ -87,7 +87,7 @@ export function Header() {
 								<Link to="/login" className="text-gray-700 hover:text-primary-600 font-medium">
 									Sign In
 								</Link>
-								<Link to="/signup" className="btn-primary">
+								<Link to="/login" className="btn-primary">
 									Get Started
 								</Link>
 							</>
@@ -153,7 +153,7 @@ export function Header() {
 										Sign In
 									</Link>
 									<Link
-										to="/signup"
+										to="/login"
 										className="block px-4 py-2 bg-primary-600 text-white text-center rounded-lg hover:bg-primary-700"
 									>
 										Get Started
