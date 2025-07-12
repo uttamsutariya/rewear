@@ -10,7 +10,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// User model - No password field as we use WorkOS
 model User {
     id        String   @id @default(uuid())
     email     String   @unique
@@ -36,11 +35,11 @@ model Item {
     title       String
     description String
     category    String
-    type        String // e.g., Shirt, Pants
-    size        String // e.g., M, L, XL
-    condition   String // e.g., New, Used, Like New
+    type        String
+    size        String
+    condition   String
     tags        String[]
-    images      String[] // Cloudinary URLs
+    images      String[]
     status      ItemStatus @default(PENDING)
     createdAt   DateTime   @default(now())
     updatedAt   DateTime   @updatedAt
@@ -55,12 +54,11 @@ model Item {
     @@map("items")
 }
 
-// SwapRequest model
 model SwapRequest {
     id            String            @id @default(uuid())
     requesterId   String
     itemId        String
-    offeredItemId String? // Nullable for point redemption
+    offeredItemId String?
     status        SwapRequestStatus @default(PENDING)
     createdAt     DateTime          @default(now())
 
@@ -72,7 +70,6 @@ model SwapRequest {
     @@map("swap_requests")
 }
 
-// Swap model - Completed exchanges
 model Swap {
     id             String   @id @default(uuid())
     swapRequestId  String   @unique
@@ -92,12 +89,11 @@ model Swap {
     @@map("swaps")
 }
 
-// PointTransaction model
 model PointTransaction {
     id        String          @id @default(uuid())
     userId    String
     itemId    String
-    amount    Int // Positive for earned, negative for redeemed
+    amount    Int @default(0)
     type      TransactionType
     createdAt DateTime        @default(now())
 
