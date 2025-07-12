@@ -1,12 +1,31 @@
-import { Mail, Calendar, Award, Package, ArrowLeftRight } from "lucide-react";
+import { Mail, Calendar, Award, Package, ArrowLeftRight, Coins, TrendingUp, TrendingDown } from "lucide-react";
 import { formatDate } from "../../lib/utils";
+import type { User, PointTransaction } from "../../types";
 
 interface ProfileSectionProps {
-	profile: any;
-	stats: any;
+	profile: User;
+	stats: {
+		totalItems: number;
+		availableItems: number;
+		pendingItems: number;
+		swappedItems: number;
+		totalSwapsCompleted: number;
+		pendingSwapRequests: {
+			sent: number;
+			received: number;
+		};
+	};
+	recentTransactions?: PointTransaction[];
 }
 
-export function ProfileSection({ profile, stats }: ProfileSectionProps) {
+export function ProfileSection({ profile, stats, recentTransactions = [] }: ProfileSectionProps) {
+	// Calculate total points earned and redeemed from transactions
+	const totalEarned = recentTransactions.filter((t) => t.type === "EARNED").reduce((sum, t) => sum + t.amount, 0);
+
+	const totalRedeemed = recentTransactions
+		.filter((t) => t.type === "REDEEMED")
+		.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
 	return (
 		<div className="p-8">
 			<h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Information</h2>
@@ -40,7 +59,7 @@ export function ProfileSection({ profile, stats }: ProfileSectionProps) {
 							<span className="text-sm text-gray-600">Points Earned</span>
 							<Award className="h-5 w-5 text-yellow-500" />
 						</div>
-						<p className="text-2xl font-bold text-gray-900">{stats?.points?.totalEarned || 0}</p>
+						<p className="text-2xl font-bold text-gray-900">{totalEarned}</p>
 						<p className="text-xs text-gray-500 mt-1">From giving items</p>
 					</div>
 
@@ -49,7 +68,7 @@ export function ProfileSection({ profile, stats }: ProfileSectionProps) {
 							<span className="text-sm text-gray-600">Points Redeemed</span>
 							<Package className="h-5 w-5 text-purple-500" />
 						</div>
-						<p className="text-2xl font-bold text-gray-900">{stats?.points?.totalRedeemed || 0}</p>
+						<p className="text-2xl font-bold text-gray-900">{totalRedeemed}</p>
 						<p className="text-xs text-gray-500 mt-1">On new items</p>
 					</div>
 
@@ -58,9 +77,7 @@ export function ProfileSection({ profile, stats }: ProfileSectionProps) {
 							<span className="text-sm text-gray-600">Total Swaps</span>
 							<ArrowLeftRight className="h-5 w-5 text-green-500" />
 						</div>
-						<p className="text-2xl font-bold text-gray-900">
-							{(stats?.swaps?.sent?.total || 0) + (stats?.swaps?.received?.total || 0)}
-						</p>
+						<p className="text-2xl font-bold text-gray-900">{stats.totalSwapsCompleted}</p>
 						<p className="text-xs text-gray-500 mt-1">Items exchanged</p>
 					</div>
 				</div>
@@ -72,22 +89,59 @@ export function ProfileSection({ profile, stats }: ProfileSectionProps) {
 				<div className="space-y-3">
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-gray-600">Available</span>
-						<span className="text-sm font-medium text-green-600">{stats?.items?.available || 0} items</span>
+						<span className="text-sm font-medium text-green-600">{stats.availableItems} items</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-gray-600">Pending Approval</span>
-						<span className="text-sm font-medium text-yellow-600">{stats?.items?.pending || 0} items</span>
+						<span className="text-sm font-medium text-yellow-600">{stats.pendingItems} items</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-gray-600">Swapped</span>
-						<span className="text-sm font-medium text-blue-600">{stats?.items?.swapped || 0} items</span>
-					</div>
-					<div className="flex items-center justify-between">
-						<span className="text-sm text-gray-600">Rejected</span>
-						<span className="text-sm font-medium text-red-600">{stats?.items?.rejected || 0} items</span>
+						<span className="text-sm font-medium text-blue-600">{stats.swappedItems} items</span>
 					</div>
 				</div>
 			</div>
+
+			{/* Recent Transactions */}
+			{recentTransactions.length > 0 && (
+				<div className="mt-8">
+					<h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Point Transactions</h3>
+					<div className="space-y-2">
+						{recentTransactions.slice(0, 5).map((transaction) => (
+							<div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+								<div className="flex items-center gap-3">
+									{transaction.type === "EARNED" ? (
+										<div className="p-2 bg-green-100 rounded-full">
+											<TrendingUp className="h-4 w-4 text-green-600" />
+										</div>
+									) : (
+										<div className="p-2 bg-red-100 rounded-full">
+											<TrendingDown className="h-4 w-4 text-red-600" />
+										</div>
+									)}
+									<div>
+										<p className="text-sm font-medium text-gray-900">
+											{transaction.type === "EARNED" ? "Points Earned" : "Points Redeemed"}
+										</p>
+										{transaction.item && <p className="text-xs text-gray-500">{transaction.item.title}</p>}
+									</div>
+								</div>
+								<div className="text-right">
+									<p
+										className={`text-sm font-semibold ${
+											transaction.type === "EARNED" ? "text-green-600" : "text-red-600"
+										}`}
+									>
+										{transaction.type === "EARNED" ? "+" : "-"}
+										{Math.abs(transaction.amount)}
+									</p>
+									<p className="text-xs text-gray-500">{formatDate(transaction.createdAt)}</p>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -12,18 +12,23 @@ import {
 	ShoppingBag,
 	Clock,
 	AlertCircle,
+	ArrowLeftRight,
+	Loader2,
 } from "lucide-react";
 import { api } from "../lib/api-client";
 import { ProfileSection } from "../components/dashboard/ProfileSection";
 import { cn } from "../lib/utils";
 import { ItemsSection } from "../components/dashboard/ItemsSection";
 import { UploadItemForm } from "../components/dashboard/UploadItemForm";
+import { SwapsSection } from "../components/dashboard/SwapsSection";
+import { Header } from "../components/layout/Header";
+import { Footer } from "../components/layout/Footer";
 
-type TabType = "profile" | "items" | "upload";
+type TabType = "profile" | "items" | "swaps" | "upload";
 
 export function Dashboard() {
 	const [activeTab, setActiveTab] = useState<TabType>("profile");
-	const { user: authUser } = useAuth();
+	const { user: authUser, signOut } = useAuth();
 
 	// Fetch dashboard data
 	const {
@@ -37,18 +42,24 @@ export function Dashboard() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+			<div className="min-h-screen bg-gray-50">
+				<Header />
+				<div className="flex items-center justify-center h-96">
+					<Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+				</div>
 			</div>
 		);
 	}
 
 	if (error || !dashboardData?.success) {
 		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-center">
-					<AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-					<p className="text-gray-600">Failed to load dashboard data</p>
+			<div className="min-h-screen bg-gray-50">
+				<Header />
+				<div className="flex items-center justify-center h-96">
+					<div className="text-center">
+						<AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+						<p className="text-gray-600">Failed to load dashboard data</p>
+					</div>
 				</div>
 			</div>
 		);
@@ -70,6 +81,12 @@ export function Dashboard() {
 			badge: stats.items.total || 0,
 		},
 		{
+			id: "swaps" as TabType,
+			label: "Swap Requests",
+			icon: ArrowLeftRight,
+			badge: (stats.swaps.sent.pending || 0) + (stats.swaps.received.pending || 0) || null,
+		},
+		{
 			id: "upload" as TabType,
 			label: "Upload Item",
 			icon: Upload,
@@ -79,9 +96,10 @@ export function Dashboard() {
 
 	return (
 		<div className="min-h-screen bg-gray-50">
-			<div className="flex">
+			<Header />
+			<div className="flex pt-20">
 				{/* Sidebar */}
-				<aside className="w-64 min-h-screen bg-white shadow-lg">
+				<aside className="w-64 min-h-[calc(100vh-5rem)] bg-white shadow-lg fixed left-0">
 					<div className="p-6">
 						<h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
 					</div>
@@ -102,7 +120,7 @@ export function Dashboard() {
 									<item.icon className="h-5 w-5" />
 									<span className="font-medium">{item.label}</span>
 								</div>
-								{item.badge !== null && (
+								{item.badge !== null && item.badge > 0 && (
 									<span
 										className={cn(
 											"text-xs px-2 py-1 rounded-full",
@@ -123,10 +141,7 @@ export function Dashboard() {
 						</button>
 
 						<button
-							onClick={() => {
-								// Handle logout
-								window.location.href = "/";
-							}}
+							onClick={() => signOut()}
 							className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
 						>
 							<LogOut className="h-5 w-5" />
@@ -136,7 +151,7 @@ export function Dashboard() {
 				</aside>
 
 				{/* Main Content */}
-				<main className="flex-1 p-8">
+				<main className="flex-1 p-8 ml-64">
 					{/* Quick Stats */}
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 						<div className="bg-white rounded-xl shadow-sm p-6">
@@ -144,7 +159,7 @@ export function Dashboard() {
 								<h3 className="text-sm font-medium text-gray-600">Points Balance</h3>
 								<Coins className="h-5 w-5 text-primary-600" />
 							</div>
-							<p className="text-3xl font-bold text-gray-900">{profile?.points || 0}</p>
+							<p className="text-3xl font-bold text-gray-900">{profile.points || 0}</p>
 							<p className="text-xs text-gray-500 mt-1">Available to redeem</p>
 						</div>
 
@@ -172,16 +187,35 @@ export function Dashboard() {
 								<Clock className="h-5 w-5 text-orange-600" />
 							</div>
 							<p className="text-3xl font-bold text-gray-900">
-								{stats.swaps.received.pending + stats.swaps.sent.pending}
+								{stats.swaps.sent.pending + stats.swaps.received.pending}
 							</p>
-							<p className="text-xs text-gray-500 mt-1">Awaiting response</p>
+							<p className="text-xs text-gray-500 mt-1">
+								{stats.swaps.received.pending} received, {stats.swaps.sent.pending} sent
+							</p>
 						</div>
 					</div>
 
 					{/* Tab Content */}
 					<div className="bg-white rounded-xl shadow-sm">
-						{activeTab === "profile" && <ProfileSection profile={profile} stats={stats} />}
+						{activeTab === "profile" && (
+							<ProfileSection
+								profile={profile}
+								stats={{
+									totalItems: stats.items.total,
+									availableItems: stats.items.available,
+									pendingItems: stats.items.pending,
+									swappedItems: stats.items.swapped,
+									totalSwapsCompleted: stats.swaps.completed,
+									pendingSwapRequests: {
+										sent: stats.swaps.sent.pending,
+										received: stats.swaps.received.pending,
+									},
+								}}
+								recentTransactions={recentActivity.pointTransactions}
+							/>
+						)}
 						{activeTab === "items" && <ItemsSection items={recentActivity.items} />}
+						{activeTab === "swaps" && <SwapsSection />}
 						{activeTab === "upload" && <UploadItemForm />}
 					</div>
 				</main>

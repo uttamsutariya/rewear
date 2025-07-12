@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workos-inc/authkit-react";
 import {
 	ArrowLeft,
@@ -20,14 +20,17 @@ import {
 import { api } from "../lib/api-client";
 import { Header } from "../components/layout/Header";
 import { Footer } from "../components/layout/Footer";
+import { SwapRequestModal } from "../components/SwapRequestModal";
 import { formatDate } from "../lib/utils";
 import { cn } from "../lib/utils";
 
 export function ItemDetailsPage() {
 	const { id } = useParams<{ id: string }>();
 	const { user } = useAuth();
+	const queryClient = useQueryClient();
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [showSwapModal, setShowSwapModal] = useState(false);
+	const [showRedeemConfirm, setShowRedeemConfirm] = useState(false);
 
 	// Fetch item details
 	const {
@@ -40,7 +43,29 @@ export function ItemDetailsPage() {
 		enabled: !!id,
 	});
 
+	// Fetch user's points balance
+	const { data: pointsData } = useQuery({
+		queryKey: ["points-balance"],
+		queryFn: () => api.points.balance(),
+		enabled: !!user,
+	});
+
+	// Redeem item mutation
+	const redeemMutation = useMutation({
+		mutationFn: (itemId: string) => api.swaps.redeem({ itemId }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["points-balance"] });
+			queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+			setShowRedeemConfirm(false);
+			alert("Item redeemed successfully! The owner will be notified.");
+		},
+		onError: (error: any) => {
+			alert(error.response?.data?.message || "Failed to redeem item");
+		},
+	});
+
 	const item = itemData?.data;
+	const userPoints = pointsData?.data?.balance || 0;
 
 	const pointsMap: Record<string, number> = {
 		New: 50,
@@ -51,6 +76,8 @@ export function ItemDetailsPage() {
 	};
 
 	const points = item ? pointsMap[item.condition] || 0 : 0;
+	const canRedeem = userPoints >= points;
+	const isOwnItem = item && user && item.userId === user.id;
 
 	if (isLoading) {
 		return (
@@ -84,6 +111,18 @@ export function ItemDetailsPage() {
 
 	const prevImage = () => {
 		setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
+	};
+
+	const handleRedeem = () => {
+		if (!canRedeem) {
+			alert(`You need ${points} points to redeem this item. You currently have ${userPoints} points.`);
+			return;
+		}
+		setShowRedeemConfirm(true);
+	};
+
+	const confirmRedeem = () => {
+		redeemMutation.mutate(item.id);
 	};
 
 	return (
@@ -212,24 +251,52 @@ export function ItemDetailsPage() {
 								{/* Action Buttons */}
 								<div className="flex gap-4 mb-8">
 									{user ? (
-										<>
-											<button
-												className="flex-1 btn-primary flex items-center justify-center gap-2"
-												onClick={() => setShowSwapModal(true)}
-											>
-												Request Swap
-											</button>
-											<button className="flex-1 btn-secondary flex items-center justify-center gap-2">
-												<Coins className="h-5 w-5" />
-												Redeem with Points
-											</button>
-										</>
+										isOwnItem ? (
+											<div className="flex-1 text-center p-4 bg-gray-100 rounded-lg">
+												<p className="text-gray-600">This is your item</p>
+											</div>
+										) : item.status !== "AVAILABLE" ? (
+											<div className="flex-1 text-center p-4 bg-gray-100 rounded-lg">
+												<p className="text-gray-600">This item is not available</p>
+											</div>
+										) : (
+											<>
+												<button
+													className="flex-1 btn-primary flex items-center justify-center gap-2"
+													onClick={() => setShowSwapModal(true)}
+												>
+													Request Swap
+												</button>
+												<button
+													onClick={handleRedeem}
+													disabled={redeemMutation.isPending}
+													className={cn(
+														"flex-1 flex items-center justify-center gap-2 rounded-lg px-6 py-3 font-medium transition-colors",
+														canRedeem
+															? "bg-secondary-600 text-white hover:bg-secondary-700"
+															: "bg-gray-300 text-gray-500 cursor-not-allowed",
+													)}
+												>
+													<Coins className="h-5 w-5" />
+													{canRedeem ? "Redeem with Points" : `Need ${points} Points`}
+												</button>
+											</>
+										)
 									) : (
 										<Link to="/login" className="flex-1 btn-primary text-center">
 											Sign In to Swap or Redeem
 										</Link>
 									)}
 								</div>
+
+								{/* User's points display */}
+								{user && !isOwnItem && (
+									<div className="mb-4 p-4 bg-gray-50 rounded-lg">
+										<p className="text-sm text-gray-600">
+											Your current balance: <span className="font-semibold text-gray-900">{userPoints} points</span>
+										</p>
+									</div>
+								)}
 
 								{/* Quick Actions */}
 								<div className="flex gap-4 text-sm">
@@ -278,6 +345,39 @@ export function ItemDetailsPage() {
 					</div>
 				</div>
 			</main>
+
+			{/* Swap Request Modal */}
+			{item && <SwapRequestModal isOpen={showSwapModal} onClose={() => setShowSwapModal(false)} targetItem={item} />}
+
+			{/* Redeem Confirmation Modal */}
+			{showRedeemConfirm && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+					<div className="bg-white rounded-xl max-w-md w-full p-6">
+						<h3 className="text-xl font-semibold mb-4">Confirm Redemption</h3>
+						<p className="text-gray-600 mb-4">
+							Are you sure you want to redeem <strong>{item.title}</strong> for <strong>{points} points</strong>?
+						</p>
+						<p className="text-sm text-gray-500 mb-6">
+							After redemption, you'll have {userPoints - points} points remaining.
+						</p>
+						<div className="flex gap-3">
+							<button
+								onClick={() => setShowRedeemConfirm(false)}
+								className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+							>
+								Cancel
+							</button>
+							<button
+								onClick={confirmRedeem}
+								disabled={redeemMutation.isPending}
+								className="flex-1 px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 disabled:bg-gray-300"
+							>
+								{redeemMutation.isPending ? "Redeeming..." : "Confirm Redemption"}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<Footer />
 		</div>
