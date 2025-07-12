@@ -1,5 +1,16 @@
 import { apiService } from "./api-service";
-import type { ApiResponse, Item, User, FeaturedItem, ItemConstants } from "../types";
+import type {
+	ApiResponse,
+	Item,
+	User,
+	FeaturedItem,
+	ItemConstants,
+	SwapRequest,
+	SwapRequestListItem,
+	PointTransaction,
+	DashboardData,
+	PaginatedResponse,
+} from "../types";
 
 export const api = {
 	auth: {
@@ -61,41 +72,92 @@ export const api = {
 		// Admin actions
 		approve: (id: string) => apiService.post<ApiResponse<Item>>(`/items/${id}/approve`),
 		reject: (id: string, reason: string) => apiService.post<ApiResponse<Item>>(`/items/${id}/reject`, { reason }),
+
+		// Get user's available items for swap
+		getUserAvailableItems: () =>
+			apiService.get<ApiResponse<{ items: Item[] }>>("/items", {
+				params: { status: "AVAILABLE", userId: "current", limit: 100 },
+			}),
 	},
 
 	swaps: {
-		createRequest: (data: { itemId: string; offeredItemId: string }) =>
-			apiService.post<ApiResponse<any>>("/swaps/requests", data),
+		createRequest: (data: { itemId: string; offeredItemId: string; message?: string }) =>
+			apiService.post<ApiResponse<SwapRequest>>("/swaps/requests", data),
 
-		redeem: (data: { itemId: string }) => apiService.post<ApiResponse<any>>("/swaps/redeem", data),
+		redeem: (data: { itemId: string }) => apiService.post<ApiResponse<SwapRequest>>("/swaps/redeem", data),
 
 		listRequests: (params?: {
-			type?: "sent" | "received";
-			status?: "pending" | "accepted" | "rejected" | "cancelled";
-		}) => apiService.get<ApiResponse<any[]>>("/swaps/requests", { params }),
+			type?: "sent" | "received" | "all";
+			status?: "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED";
+			page?: number;
+			limit?: number;
+		}) =>
+			apiService.get<
+				ApiResponse<{
+					requests: SwapRequestListItem[];
+					pagination: {
+						page: number;
+						limit: number;
+						total: number;
+						totalPages: number;
+					};
+				}>
+			>("/swaps/requests", { params }),
 
-		respond: (id: string, action: "accept" | "reject") =>
-			apiService.post<ApiResponse<any>>(`/swaps/requests/${id}/respond`, { action }),
+		getRequestById: (id: string) => apiService.get<ApiResponse<SwapRequest>>(`/swaps/requests/${id}`),
 
-		history: () => apiService.get<ApiResponse<any[]>>("/swaps/history"),
+		respond: (id: string, action: "accept" | "reject", message?: string) =>
+			apiService.post<ApiResponse<SwapRequest>>(`/swaps/requests/${id}/respond`, { action, message }),
+
+		cancel: (id: string) => apiService.post<ApiResponse<{ message: string }>>(`/swaps/requests/${id}/cancel`),
+
+		history: (params?: { page?: number; limit?: number }) =>
+			apiService.get<ApiResponse<any[]>>("/swaps/history", { params }),
 	},
 
 	points: {
 		balance: () => apiService.get<ApiResponse<{ balance: number }>>("/points/balance"),
-		transactions: () => apiService.get<ApiResponse<any[]>>("/points/transactions"),
+		transactions: (params?: { type?: "earned" | "redeemed" | "all"; page?: number; limit?: number }) =>
+			apiService.get<
+				ApiResponse<{
+					transactions: PointTransaction[];
+					summary: {
+						totalEarned: number;
+						totalRedeemed: number;
+						currentBalance: number;
+					};
+					pagination: {
+						page: number;
+						limit: number;
+						total: number;
+						totalPages: number;
+					};
+				}>
+			>("/points/transactions", { params }),
 		leaderboard: () => apiService.get<ApiResponse<any[]>>("/points/leaderboard"),
 		calculate: (itemId: string) =>
 			apiService.get<ApiResponse<{ points: number; condition: string }>>(`/points/calculate/${itemId}`),
 	},
 
 	dashboard: {
-		get: () => apiService.get<ApiResponse<any>>("/dashboard"),
+		get: () => apiService.get<ApiResponse<DashboardData>>("/dashboard"),
+		summary: () => apiService.get<ApiResponse<any>>("/dashboard/summary"),
 	},
 
 	admin: {
 		stats: () => apiService.get<ApiResponse<any>>("/admin/stats"),
 		pendingItems: (params?: { page?: number; limit?: number }) =>
-			apiService.get<ApiResponse<any>>("/admin/items/pending", { params }),
+			apiService.get<
+				ApiResponse<{
+					items: Item[];
+					pagination: {
+						page: number;
+						limit: number;
+						total: number;
+						pages: number;
+					};
+				}>
+			>("/admin/items/pending", { params }),
 	},
 };
 
