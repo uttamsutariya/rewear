@@ -14,7 +14,7 @@ router.use(authenticate, requireAdmin);
  * Get platform overview statistics
  * Simple counts for admin dashboard
  */
-router.get("/stats", async (req, res, next) => {
+router.get("/stats", async (_req, res, next) => {
 	try {
 		const [totalUsers, itemStats] = await Promise.all([
 			prisma.user.count(),

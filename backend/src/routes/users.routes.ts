@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireAuth } from "../middleware/auth.middleware";
-import { sendSuccess, sendError } from "../utils/responses";
+import { sendSuccess } from "../utils/responses";
 import { prisma } from "../config/database";
 import { NotFoundError } from "../utils/errors";
 

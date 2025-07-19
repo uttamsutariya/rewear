@@ -5,7 +5,7 @@ import { ForbiddenError, UnauthorizedError } from "../utils/errors";
  * Middleware to require admin role
  * Must be used after authenticate middleware
  */
-export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+export const requireAdmin = (req: Request, _res: Response, next: NextFunction): void => {
 	if (!req.user) {
 		throw new UnauthorizedError("Authentication required");
 	}
@@ -23,7 +23,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction): v
  * @returns Middleware function
  */
 export const requireOwnership = (getResourceOwnerId: (req: Request) => Promise<string | null>) => {
-	return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+	return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
 		try {
 			if (!req.user) {
 				throw new UnauthorizedError("Authentication required");
@@ -44,8 +44,10 @@ export const requireOwnership = (getResourceOwnerId: (req: Request) => Promise<s
 			}
 
 			next();
-		} catch (error) {
-			next(error);
+			return;
+		} catch (err) {
+			next(err);
+			return;
 		}
 	};
 };

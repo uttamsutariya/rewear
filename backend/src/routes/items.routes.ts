@@ -19,7 +19,7 @@ const router = Router();
  * Get item constants (categories, types, sizes, conditions)
  * Public endpoint
  */
-router.get("/constants", (req, res) => {
+router.get("/constants", (_req, res) => {
 	sendSuccess(res, ITEM_CONSTANTS);
 });
 
@@ -112,12 +112,14 @@ router.get("/:id", authenticate, async (req, res, next) => {
 		}
 
 		sendSuccess(res, item);
-	} catch (error) {
-		next(error);
+		return;
+	} catch (err) {
+		next(err);
+		return;
 	}
 });
 
-/**
+/**	
  * PUT /api/items/:id
  * Update an item
  * Requires authentication and ownership (or admin)
@@ -127,8 +129,10 @@ router.put("/:id", authenticate, requireAuth, validate(updateItemSchema), async 
 		const { id } = req.params;
 		const item = await ItemService.updateItem(id, req.user!.id, req.body, req.user!.isAdmin);
 		sendSuccess(res, item, "Item updated successfully");
-	} catch (error) {
-		next(error);
+		return;
+	} catch (err) {
+		next(err);
+		return;
 	}
 });
 
@@ -142,8 +146,10 @@ router.delete("/:id", authenticate, requireAuth, async (req, res, next) => {
 		const { id } = req.params;
 		await ItemService.deleteItem(id, req.user!.id, req.user!.isAdmin);
 		sendNoContent(res);
-	} catch (error) {
-		next(error);
+		return;
+	} catch (err) {
+		next(err);
+		return;
 	}
 });
 

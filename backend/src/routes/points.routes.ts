@@ -20,7 +20,6 @@ router.get(
 	async (req, res, next) => {
 		try {
 			const { type, page, limit } = req.query as any;
-
 			const result = await PointsService.getUserPointTransactions(req.user!.id, type, page, limit);
 
 			sendSuccess(res, result);
@@ -90,8 +89,10 @@ router.get("/calculate/:itemId", async (req, res, next) => {
 			condition: item.condition,
 			points,
 		});
-	} catch (error) {
-		next(error);
+		return;
+	} catch (err) {
+		next(err);
+		return;
 	}
 });
 
