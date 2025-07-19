@@ -55,8 +55,10 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 
 		req.user = user;
 		next();
-	} catch (error) {
-		next(error);
+		return;
+	} catch (err) {
+		next(err);
+		return;
 	}
 };
 
@@ -69,4 +71,4 @@ export const requireAuth = (req: Request, _res: Response, next: NextFunction): v
 		throw new UnauthorizedError("Authentication required");
 	}
 	next();
-};
+	};

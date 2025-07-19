@@ -9,10 +9,8 @@ const router = Router();
  * Get current authenticated user
  */
 router.get("/me", authenticate, (req, res) => {
-	const { createdAt, ...userWithoutSensitive } = req.user!;
-
 	sendSuccess(res, {
-		user: userWithoutSensitive,
+		user: req.user!,
 	});
 });
 
@@ -21,7 +19,7 @@ router.get("/me", authenticate, (req, res) => {
  * Logout endpoint (mainly for frontend to clear session)
  * Since we use JWT tokens, there's no server-side session to clear
  */
-router.post("/logout", (req, res) => {
+router.post("/logout", (_req, res) => {
 	sendSuccess(res, {
 		message: "Logged out successfully",
 	});

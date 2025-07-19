@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { authenticate, requireAuth } from "../middleware/auth.middleware";
-import { uploadImages, handleUploadError } from "../middleware/upload.middleware";
+import { uploadImages } from "../middleware/upload.middleware";
 import { UploadService } from "../services/upload.service";
-import { sendSuccess, sendError } from "../utils/responses";
+import { sendSuccess } from "../utils/responses";
 import { ValidationError } from "../utils/errors";
 
 const router = Router();
@@ -18,10 +18,7 @@ router.post(
 	requireAuth,
 	(req: Request, res: Response, next: NextFunction) => {
 		uploadImages(req, res, (err) => {
-			if (err) {
-				const errorMessage = handleUploadError(err);
-				return sendError(res, "Upload Error", errorMessage, 400);
-			}
+			if (err) return next(err);
 			next();
 		});
 	},
@@ -64,10 +61,7 @@ router.post(
 	(req: Request, res: Response, next: NextFunction) => {
 		const singleUpload = uploadImages;
 		singleUpload(req, res, (err) => {
-			if (err) {
-				const errorMessage = handleUploadError(err);
-				return sendError(res, "Upload Error", errorMessage, 400);
-			}
+			if (err) return next(err);
 			next();
 		});
 	},
